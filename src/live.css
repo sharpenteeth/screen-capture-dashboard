@@ -1,0 +1,162 @@
+@keyframes live-drift {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(6%, -4%, 0) scale(1.08); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes live-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes live-pulse {
+  0% { box-shadow: 0 0 0 0 var(--pulse, rgba(63, 107, 74, 0.55)); }
+  70% { box-shadow: 0 0 0 8px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+@keyframes live-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes live-sheen {
+  from { background-position: 0% 50%; }
+  to { background-position: 200% 50%; }
+}
+
+.live-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.live-backdrop span {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(46px);
+  opacity: 0.7;
+  animation: live-drift 22s ease-in-out infinite;
+}
+
+.live-backdrop span:nth-child(1) {
+  width: 460px;
+  height: 460px;
+  top: -140px;
+  right: -80px;
+  background: #f0c7a4;
+}
+
+.live-backdrop span:nth-child(2) {
+  width: 380px;
+  height: 380px;
+  bottom: -120px;
+  left: 18%;
+  background: #c9ddd2;
+  animation-duration: 28s;
+  animation-delay: -8s;
+}
+
+.live-backdrop span:nth-child(3) {
+  width: 260px;
+  height: 260px;
+  top: 30%;
+  left: 42%;
+  background: #ead8c4;
+  animation-duration: 18s;
+  animation-delay: -4s;
+}
+
+.live-rail {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.live-rail::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  width: 220px;
+  height: 220px;
+  top: -70px;
+  right: -70px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(154, 52, 18, 0.55), transparent 68%);
+  animation: live-drift 14s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.live-rail > * {
+  position: relative;
+  z-index: 1;
+}
+
+.pulse-online,
+.pulse-ember {
+  animation: live-pulse 2.4s ease-out infinite;
+}
+
+.pulse-ember {
+  --pulse: rgba(231, 184, 154, 0.75);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e7b89a;
+  flex-shrink: 0;
+}
+
+.live-rise {
+  animation: live-rise 520ms ease both;
+}
+
+.live-stat {
+  position: relative;
+  overflow: hidden;
+}
+
+.live-stat::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #9a3412, #e7b89a, #1f4b3a, #9a3412);
+  background-size: 200% 100%;
+  animation: live-sheen 7s linear infinite;
+}
+
+.live-shot img {
+  transition: transform 480ms ease;
+}
+
+.live-shot:hover img {
+  transform: scale(1.045);
+}
+
+.share-orbit {
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: live-spin 18s linear infinite;
+}
+
+.share-readout {
+  animation: live-rise 280ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-backdrop span,
+  .live-rail::before,
+  .pulse-online,
+  .pulse-ember,
+  .live-rise,
+  .live-stat::before,
+  .share-orbit,
+  .share-readout,
+  .live-shot img {
+    animation: none;
+    transition: none;
+  }
+}

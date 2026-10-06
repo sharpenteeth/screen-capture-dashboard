@@ -124,7 +124,7 @@ export function TimelinePage() {
         <Alert severity="info">No screenshots or activity for this day.</Alert>
       )}
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "320px 1fr" }, gap: 2, alignItems: "start" }}>
-      <Card sx={{ p: 2 }}>
+      <Card className="live-still" sx={{ p: 2 }}>
         <Typography variant="h6">Activity</Typography>
         {percent === null ? (
           <Typography color="text.secondary" sx={{ mt: 1, mb: 1 }}>
@@ -143,7 +143,7 @@ export function TimelinePage() {
       </Card>
       <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 2 }}>
         {shots.map((shot) => (
-          <Card key={shot.id} sx={{ p: 1.5 }}>
+          <Card key={shot.id} className="live-shot" sx={{ p: 1.5 }}>
             <Box
               onClick={() => {
                 setScale(1);
@@ -215,29 +215,59 @@ const SLICE_COLORS = [
   "#d6d3d1",
 ];
 
+function shortApp(name: string): string {
+  const bare = name.replace(/\.exe$/i, "");
+  return bare.length > 12 ? `${bare.slice(0, 11)}…` : bare;
+}
+
 function AppShare({ apps }: { apps: { name: string; seconds: number }[] }) {
   const top = apps.slice(0, TOP_APPS);
   const otherSeconds = apps.slice(TOP_APPS).reduce((sum, app) => sum + app.seconds, 0);
   const slices = otherSeconds > 0 ? [...top, { name: "Other", seconds: otherSeconds }] : top;
   const total = slices.reduce((sum, app) => sum + app.seconds, 0);
-  const size = 168;
+  const signature = slices.map((app) => app.name).join("|");
+  const [born, setBorn] = useState(false);
+  const [cursorIndex, setCursorIndex] = useState(0);
+  const [hot, setHot] = useState<number | null>(null);
+  const shown = hot ?? cursorIndex % Math.max(slices.length, 1);
+  const size = 196;
   const stroke = 22;
   const radius = (size - stroke) / 2;
   const center = size / 2;
   const circumference = 2 * Math.PI * radius;
   let cursor = 0;
 
+  useEffect(() => {
+    setBorn(false);
+    const id = window.setTimeout(() => setBorn(true), 40);
+    return () => window.clearTimeout(id);
+  }, [signature]);
+
+  useEffect(() => {
+    if (hot !== null || slices.length < 2) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const id = window.setInterval(() => setCursorIndex((value) => (value + 1) % slices.length), 2200);
+    return () => window.clearInterval(id);
+  }, [hot, slices.length]);
+
+  const focus = slices[shown];
+  const focusPct = focus && total > 0 ? Math.round((focus.seconds / total) * 100) : 0;
+
   return (
-    <Stack spacing={1.25} sx={{ mb: 2 }}>
-      <Box sx={{ display: "flex", justifyContent: "center" }}>
+    <Stack spacing={1.25} sx={{ mb: 1 }} onMouseLeave={() => setHot(null)}>
+      <Box sx={{ position: "relative", width: size, height: size, mx: "auto" }}>
         <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label="Top 10 apps">
-          <circle cx={center} cy={center} r={radius} fill="none" stroke="#e4dccf" strokeWidth={stroke} />
+          <circle className="share-orbit" cx={center} cy={center} r={radius + 10} fill="none" stroke="#e7b89a" strokeWidth="1.5" strokeDasharray="10 46" opacity="0.8" />
+          <circle cx={center} cy={center} r={radius} fill="none" stroke="#efe8dc" strokeWidth={stroke} />
           {slices.map((app, index) => {
             const fraction = total > 0 ? app.seconds / total : 0;
-            const length = fraction * circumference;
+            const raw = fraction * circumference;
+            const length = Math.max(0, raw - (slices.length > 1 && raw > 8 ? 5 : 0));
             const rotation = (cursor / circumference) * 360 - 90;
-            cursor += length;
+            cursor += raw;
             const gap = Math.max(0, circumference - length);
+            const lit = shown === index;
+            const color = SLICE_COLORS[index % SLICE_COLORS.length];
             return (
               <circle
                 key={app.name}
@@ -245,39 +275,88 @@ function AppShare({ apps }: { apps: { name: string; seconds: number }[] }) {
                 cy={center}
                 r={radius}
                 fill="none"
-                stroke={SLICE_COLORS[index % SLICE_COLORS.length]}
-                strokeWidth={stroke}
+                stroke={color}
+                strokeWidth={lit ? 30 : stroke}
+                strokeLinecap="round"
                 strokeDasharray={gap < 1 ? undefined : `${length} ${gap}`}
+                strokeDashoffset={born ? 0 : length}
                 transform={`rotate(${rotation} ${center} ${center})`}
-              >
-                <title>{`${app.name} ${formatDuration(app.seconds)}`}</title>
-              </circle>
+                opacity={hot !== null && !lit ? 0.28 : 1}
+                style={{
+                  cursor: "pointer",
+                  transition: "stroke-dashoffset 900ms cubic-bezier(.2,.8,.2,1), stroke-width 180ms ease, opacity 180ms ease",
+                  filter: lit ? `drop-shadow(0 0 6px ${color})` : "none",
+                }}
+                onMouseEnter={() => setHot(index)}
+              />
             );
           })}
         </svg>
+        <Box
+          key={shown}
+          className="share-readout"
+          sx={{
+            position: "absolute",
+            inset: 46,
+            display: "grid",
+            placeItems: "center",
+            textAlign: "center",
+            pointerEvents: "none",
+          }}
+        >
+          <Box>
+            <Typography variant="subtitle2" noWrap sx={{ maxWidth: 96 }}>
+              {focus ? shortApp(focus.name) : ""}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {focus ? `${formatDuration(focus.seconds)} · ${focusPct}%` : ""}
+            </Typography>
+          </Box>
+        </Box>
       </Box>
-      {slices.map((app, index) => (
-        <Stack key={app.name} direction="row" spacing={1} sx={{ alignItems: "center" }}>
-          <Box
+      {slices.map((app, index) => {
+        const lit = shown === index;
+        const color = SLICE_COLORS[index % SLICE_COLORS.length];
+        return (
+          <Stack
+            key={app.name}
+            direction="row"
+            spacing={1}
+            onMouseEnter={() => setHot(index)}
             sx={{
-              width: 8,
-              height: 8,
-              borderRadius: "50%",
-              bgcolor: SLICE_COLORS[index % SLICE_COLORS.length],
-              flexShrink: 0,
+              alignItems: "center",
+              px: 1,
+              py: 0.45,
+              borderRadius: 2,
+              cursor: "pointer",
+              bgcolor: lit ? "rgba(154, 52, 18, 0.08)" : "transparent",
+              transform: lit ? "translateX(4px)" : "none",
+              transition: "background-color 180ms ease, transform 180ms ease",
             }}
-          />
-          <Typography variant="body2" noWrap sx={{ flexGrow: 1 }}>
-            {app.name}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {formatDuration(app.seconds)}
-          </Typography>
-          <Typography variant="caption" sx={{ minWidth: 36, textAlign: "right" }}>
-            {total > 0 ? `${Math.round((app.seconds / total) * 100)}%` : ""}
-          </Typography>
-        </Stack>
-      ))}
+          >
+            <Box
+              sx={{
+                width: lit ? 10 : 8,
+                height: lit ? 10 : 8,
+                borderRadius: "50%",
+                bgcolor: color,
+                boxShadow: lit ? `0 0 0 4px ${color}33` : "none",
+                flexShrink: 0,
+                transition: "width 180ms ease, height 180ms ease, box-shadow 180ms ease",
+              }}
+            />
+            <Typography variant="body2" noWrap sx={{ flexGrow: 1, fontWeight: lit ? 650 : 400 }}>
+              {app.name}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {formatDuration(app.seconds)}
+            </Typography>
+            <Typography variant="caption" sx={{ minWidth: 36, textAlign: "right" }}>
+              {total > 0 ? `${Math.round((app.seconds / total) * 100)}%` : ""}
+            </Typography>
+          </Stack>
+        );
+      })}
     </Stack>
   );
 }

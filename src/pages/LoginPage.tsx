@@ -2,6 +2,7 @@ import { Alert, Box, Button, Paper, Stack, TextField, Typography } from "@mui/ma
 import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "../api";
+import { LiveBackdrop } from "../components/LiveBackdrop";
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -26,7 +27,8 @@ export function LoginPage() {
 
   return (
     <Box sx={{ minHeight: "100vh", display: "grid", placeItems: "center", px: 2 }}>
-      <Paper sx={{ width: "min(440px, 100%)", p: 4 }}>
+      <LiveBackdrop />
+      <Paper className="live-rise" sx={{ position: "relative", zIndex: 1, width: "min(440px, 100%)", p: 4 }}>
         <Typography variant="overline" sx={{ color: "primary.main", letterSpacing: "0.14em" }}>
           Screen Capture
         </Typography>

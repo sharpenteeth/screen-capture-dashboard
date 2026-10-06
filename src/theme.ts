@@ -17,8 +17,28 @@ const theme = createTheme({
   },
   shape: { borderRadius: 12 },
   components: {
-    MuiButton: { styleOverrides: { root: { textTransform: "none", fontWeight: 600 } } },
-    MuiCard: { styleOverrides: { root: { backgroundImage: "none", border: "1px solid #e4dccf" } } },
+    MuiButton: {
+      styleOverrides: {
+        root: { textTransform: "none", fontWeight: 600, transition: "transform 180ms ease, background-color 180ms ease, box-shadow 180ms ease" },
+        contained: { "&:hover": { transform: "translateY(-1px)" } },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          backgroundImage: "none",
+          backgroundColor: "rgba(255, 253, 248, 0.9)",
+          border: "1px solid rgba(228, 220, 207, 0.95)",
+          backdropFilter: "blur(10px)",
+          transition: "transform 240ms ease, box-shadow 240ms ease",
+          "&:hover": {
+            transform: "translateY(-3px)",
+            boxShadow: "0 16px 34px rgba(28, 25, 21, 0.08)",
+          },
+          "&.live-still:hover": { transform: "none", boxShadow: "none" },
+        },
+      },
+    },
   },
 });
 

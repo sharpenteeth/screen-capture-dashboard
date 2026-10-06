@@ -84,12 +84,14 @@ export function OverviewPage() {
                   cursor: "pointer",
                   borderTop: "1px solid",
                   borderColor: "divider",
-                  "&:hover": { bgcolor: "action.hover" },
+                  transition: "background-color 180ms ease, transform 180ms ease",
+                  "&:hover": { bgcolor: "rgba(154, 52, 18, 0.06)", transform: "translateX(3px)" },
                 }}
               >
                 <Box sx={{ minWidth: 0 }}>
                   <Stack direction="row" spacing={0.75} sx={{ alignItems: "center" }}>
                     <Box
+                      className={person.online ? "pulse-online" : undefined}
                       sx={{
                         width: 8,
                         height: 8,
@@ -169,7 +171,7 @@ function activityTimes(person: Person): string {
 
 function Stat({ label, value }: { label: string; value: number | string }) {
   return (
-    <Card sx={{ p: 2.5 }}>
+    <Card className="live-stat" sx={{ p: 2.5 }}>
       <Typography variant="overline" color="text.secondary">
         {label}
       </Typography>

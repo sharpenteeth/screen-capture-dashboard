@@ -72,7 +72,7 @@ export function RequestPage() {
       )}
       <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 2 }}>
         {(row?.images ?? []).map((image) => (
-          <Card key={image.id} sx={{ p: 1.5 }}>
+          <Card key={image.id} className="live-shot" sx={{ p: 1.5 }}>
             <AuthImage path={image.url} alt={`Original at ${formatWhen(image.captureTime)}`} />
             <Typography variant="body2" sx={{ mt: 1 }}>
               {formatWhen(image.captureTime)}
