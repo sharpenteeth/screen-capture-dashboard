@@ -4,10 +4,6 @@
   100% { transform: translate3d(0, 0, 0) scale(1); }
 }
 
-@keyframes live-spin {
-  to { transform: rotate(360deg); }
-}
-
 @keyframes live-pulse {
   0% { box-shadow: 0 0 0 0 var(--pulse, rgba(63, 107, 74, 0.55)); }
   70% { box-shadow: 0 0 0 8px transparent; }
@@ -136,16 +132,6 @@
   transform: scale(1.045);
 }
 
-.share-orbit {
-  transform-origin: center;
-  transform-box: fill-box;
-  animation: live-spin 18s linear infinite;
-}
-
-.share-readout {
-  animation: live-rise 280ms ease;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .live-backdrop span,
   .live-rail::before,
@@ -153,8 +139,6 @@
   .pulse-ember,
   .live-rise,
   .live-stat::before,
-  .share-orbit,
-  .share-readout,
   .live-shot img {
     animation: none;
     transition: none;

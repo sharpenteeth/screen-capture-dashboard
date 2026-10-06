@@ -17,6 +17,7 @@ import {
   ToggleButtonGroup,
   Typography,
 } from "@mui/material";
+import { PieChart } from "@mui/x-charts/PieChart";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api, currentUser, readCache } from "../api";
@@ -215,108 +216,43 @@ const SLICE_COLORS = [
   "#d6d3d1",
 ];
 
-function shortApp(name: string): string {
-  const bare = name.replace(/\.exe$/i, "");
-  return bare.length > 12 ? `${bare.slice(0, 11)}…` : bare;
-}
-
 function AppShare({ apps }: { apps: { name: string; seconds: number }[] }) {
   const top = apps.slice(0, TOP_APPS);
   const otherSeconds = apps.slice(TOP_APPS).reduce((sum, app) => sum + app.seconds, 0);
   const slices = otherSeconds > 0 ? [...top, { name: "Other", seconds: otherSeconds }] : top;
   const total = slices.reduce((sum, app) => sum + app.seconds, 0);
-  const signature = slices.map((app) => app.name).join("|");
-  const [born, setBorn] = useState(false);
-  const [cursorIndex, setCursorIndex] = useState(0);
   const [hot, setHot] = useState<number | null>(null);
-  const shown = hot ?? cursorIndex % Math.max(slices.length, 1);
-  const size = 196;
-  const stroke = 22;
-  const radius = (size - stroke) / 2;
-  const center = size / 2;
-  const circumference = 2 * Math.PI * radius;
-  let cursor = 0;
-
-  useEffect(() => {
-    setBorn(false);
-    const id = window.setTimeout(() => setBorn(true), 40);
-    return () => window.clearTimeout(id);
-  }, [signature]);
-
-  useEffect(() => {
-    if (hot !== null || slices.length < 2) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const id = window.setInterval(() => setCursorIndex((value) => (value + 1) % slices.length), 2200);
-    return () => window.clearInterval(id);
-  }, [hot, slices.length]);
-
-  const focus = slices[shown];
-  const focusPct = focus && total > 0 ? Math.round((focus.seconds / total) * 100) : 0;
 
   return (
-    <Stack spacing={1.25} sx={{ mb: 1 }} onMouseLeave={() => setHot(null)}>
-      <Box sx={{ position: "relative", width: size, height: size, mx: "auto" }}>
-        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label="Top 10 apps">
-          <circle className="share-orbit" cx={center} cy={center} r={radius + 10} fill="none" stroke="#e7b89a" strokeWidth="1.5" strokeDasharray="10 46" opacity="0.8" />
-          <circle cx={center} cy={center} r={radius} fill="none" stroke="#efe8dc" strokeWidth={stroke} />
-          {slices.map((app, index) => {
-            const fraction = total > 0 ? app.seconds / total : 0;
-            const raw = fraction * circumference;
-            const length = Math.max(0, raw - (slices.length > 1 && raw > 8 ? 5 : 0));
-            const rotation = (cursor / circumference) * 360 - 90;
-            cursor += raw;
-            const gap = Math.max(0, circumference - length);
-            const lit = shown === index;
-            const color = SLICE_COLORS[index % SLICE_COLORS.length];
-            return (
-              <circle
-                key={app.name}
-                cx={center}
-                cy={center}
-                r={radius}
-                fill="none"
-                stroke={color}
-                strokeWidth={lit ? 30 : stroke}
-                strokeLinecap="round"
-                strokeDasharray={gap < 1 ? undefined : `${length} ${gap}`}
-                strokeDashoffset={born ? 0 : length}
-                transform={`rotate(${rotation} ${center} ${center})`}
-                opacity={hot !== null && !lit ? 0.28 : 1}
-                style={{
-                  cursor: "pointer",
-                  transition: "stroke-dashoffset 900ms cubic-bezier(.2,.8,.2,1), stroke-width 180ms ease, opacity 180ms ease",
-                  filter: lit ? `drop-shadow(0 0 6px ${color})` : "none",
-                }}
-                onMouseEnter={() => setHot(index)}
-              />
-            );
-          })}
-        </svg>
-        <Box
-          key={shown}
-          className="share-readout"
-          sx={{
-            position: "absolute",
-            inset: 46,
-            display: "grid",
-            placeItems: "center",
-            textAlign: "center",
-            pointerEvents: "none",
-          }}
-        >
-          <Box>
-            <Typography variant="subtitle2" noWrap sx={{ maxWidth: 96 }}>
-              {focus ? shortApp(focus.name) : ""}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {focus ? `${formatDuration(focus.seconds)} · ${focusPct}%` : ""}
-            </Typography>
-          </Box>
-        </Box>
-      </Box>
+    <Stack spacing={0.5} sx={{ mt: 1 }} onMouseLeave={() => setHot(null)}>
+      <PieChart
+        colors={SLICE_COLORS}
+        width={280}
+        height={210}
+        margin={{ top: 12, right: 12, bottom: 12, left: 12 }}
+        highlightedItem={hot === null ? null : { seriesId: "apps", dataIndex: hot }}
+        onHighlightChange={(item) => setHot(item?.dataIndex ?? null)}
+        slotProps={{ legend: { hidden: true } }}
+        series={[
+          {
+            id: "apps",
+            data: slices.map((app, index) => ({ id: index, value: app.seconds, label: app.name })),
+            innerRadius: 46,
+            outerRadius: 82,
+            paddingAngle: 1.2,
+            cornerRadius: 3,
+            highlightScope: { highlight: "item", fade: "global" },
+            highlighted: { additionalRadius: 0 },
+            faded: { additionalRadius: 0 },
+            valueFormatter: (item) => {
+              const pct = total > 0 ? Math.round((item.value / total) * 100) : 0;
+              return `${formatDuration(item.value)} · ${pct}%`;
+            },
+          },
+        ]}
+      />
       {slices.map((app, index) => {
-        const lit = shown === index;
-        const color = SLICE_COLORS[index % SLICE_COLORS.length];
+        const lit = hot === index;
         return (
           <Stack
             key={app.name}
@@ -326,26 +262,14 @@ function AppShare({ apps }: { apps: { name: string; seconds: number }[] }) {
             sx={{
               alignItems: "center",
               px: 1,
-              py: 0.45,
-              borderRadius: 2,
+              py: 0.4,
+              borderRadius: 1,
               cursor: "pointer",
-              bgcolor: lit ? "rgba(154, 52, 18, 0.08)" : "transparent",
-              transform: lit ? "translateX(4px)" : "none",
-              transition: "background-color 180ms ease, transform 180ms ease",
+              bgcolor: lit ? "action.hover" : "transparent",
             }}
           >
-            <Box
-              sx={{
-                width: lit ? 10 : 8,
-                height: lit ? 10 : 8,
-                borderRadius: "50%",
-                bgcolor: color,
-                boxShadow: lit ? `0 0 0 4px ${color}33` : "none",
-                flexShrink: 0,
-                transition: "width 180ms ease, height 180ms ease, box-shadow 180ms ease",
-              }}
-            />
-            <Typography variant="body2" noWrap sx={{ flexGrow: 1, fontWeight: lit ? 650 : 400 }}>
+            <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: SLICE_COLORS[index % SLICE_COLORS.length], flexShrink: 0 }} />
+            <Typography variant="body2" noWrap sx={{ flexGrow: 1 }}>
               {app.name}
             </Typography>
             <Typography variant="caption" color="text.secondary">
