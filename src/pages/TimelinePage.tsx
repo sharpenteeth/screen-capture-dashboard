@@ -124,7 +124,7 @@ export function TimelinePage() {
         <Alert severity="info">No screenshots or activity for this day.</Alert>
       )}
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "320px 1fr" }, gap: 2, alignItems: "start" }}>
-      <Card sx={{ p: 2, maxHeight: { lg: "70vh" }, overflow: "auto" }}>
+      <Card sx={{ p: 2 }}>
         <Typography variant="h6">Activity</Typography>
         {percent === null ? (
           <Typography color="text.secondary" sx={{ mt: 1, mb: 1 }}>
@@ -140,26 +140,6 @@ export function TimelinePage() {
           </Box>
         )}
         {totals.apps.length > 0 && <AppShare apps={totals.apps} />}
-        <Stack spacing={1.25}>
-          {activity.map((event) => (
-            <Box key={event.id} sx={{ borderTop: "1px solid", borderColor: "divider", pt: 1 }}>
-              <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-                <Typography variant="caption" sx={{ minWidth: 72 }}>
-                  {formatClock(event.recordedAt)}
-                </Typography>
-                <Chip size="small" label={event.state === "idle" ? "Idle" : "Active"} color={event.state === "idle" ? "default" : "success"} />
-                <Typography variant="body2" noWrap sx={{ flexGrow: 1 }}>
-                  {event.appName || "Desktop"}
-                </Typography>
-              </Stack>
-              {event.windowTitle && (
-                <Typography variant="caption" color="text.secondary" sx={{ display: "block", pl: "80px" }}>
-                  {event.windowTitle}
-                </Typography>
-              )}
-            </Box>
-          ))}
-        </Stack>
       </Card>
       <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 2 }}>
         {shots.map((shot) => (
