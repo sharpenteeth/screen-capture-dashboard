@@ -10,10 +10,12 @@ export function AppShell() {
   if (user?.role === "admin") links.push({ to: "/directory", label: "Users" });
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh", flexDirection: { xs: "column", md: "row" } }}>
+    <Box sx={{ display: "flex", height: "100vh", overflow: "hidden", flexDirection: { xs: "column", md: "row" } }}>
       <Box
         sx={{
           width: { xs: "auto", md: 248 },
+          flexShrink: 0,
+          height: { xs: "auto", md: "100%" },
           bgcolor: "#1c1915",
           color: "#f6f1e8",
           px: 2.5,
@@ -32,7 +34,7 @@ export function AppShell() {
             Activity desk
           </Typography>
         </Box>
-        <Box sx={{ display: "flex", flexDirection: { xs: "row", md: "column" }, gap: 0.5, flexGrow: 1 }}>
+        <Box sx={{ display: "flex", flexDirection: { xs: "row", md: "column" }, gap: 0.5, flexGrow: 1, minHeight: 0, overflow: "auto" }}>
           {links.map((link) => (
             <NavLink key={link.to} to={link.to} end={link.to === "/"} style={{ textDecoration: "none" }}>
               {({ isActive }) => (
@@ -51,7 +53,7 @@ export function AppShell() {
             </NavLink>
           ))}
         </Box>
-        <Box>
+        <Box sx={{ flexShrink: 0 }}>
           <Typography variant="body2">{user?.fullName}</Typography>
           <Typography variant="caption" sx={{ color: "#c8bfb2", textTransform: "capitalize" }}>
             {user?.role}
@@ -69,7 +71,7 @@ export function AppShell() {
           </Button>
         </Box>
       </Box>
-      <Box sx={{ flex: 1, p: { xs: 2, md: 4 } }}>
+      <Box sx={{ flex: 1, minWidth: 0, minHeight: 0, overflow: "auto", p: { xs: 2, md: 4 } }}>
         <Outlet />
       </Box>
     </Box>
