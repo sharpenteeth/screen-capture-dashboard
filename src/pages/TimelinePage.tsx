@@ -139,23 +139,7 @@ export function TimelinePage() {
             </Typography>
           </Box>
         )}
-        {totals.apps.length > 0 && (
-          <Stack spacing={0.75} sx={{ mb: 2 }}>
-            {totals.apps.map((app) => (
-              <Stack key={app.name} direction="row" spacing={1} sx={{ alignItems: "baseline" }}>
-                <Typography variant="body2" noWrap sx={{ flexGrow: 1 }}>
-                  {app.name}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {formatDuration(app.seconds)}
-                </Typography>
-                <Typography variant="caption" sx={{ minWidth: 36, textAlign: "right" }}>
-                  {totals.active > 0 ? `${Math.round((app.seconds / totals.active) * 100)}%` : ""}
-                </Typography>
-              </Stack>
-            ))}
-          </Stack>
-        )}
+        {totals.apps.length > 0 && <AppShare apps={totals.apps} />}
         <Stack spacing={1.25}>
           {activity.map((event) => (
             <Box key={event.id} sx={{ borderTop: "1px solid", borderColor: "divider", pt: 1 }}>
@@ -232,6 +216,88 @@ export function TimelinePage() {
           </Button>
         </DialogActions>
       </Dialog>
+    </Stack>
+  );
+}
+
+const TOP_APPS = 10;
+const SLICE_COLORS = [
+  "#9a3412",
+  "#1f4b3a",
+  "#c2410c",
+  "#3f6b4a",
+  "#b45309",
+  "#57534e",
+  "#0f766e",
+  "#a16207",
+  "#7c2d12",
+  "#44403c",
+  "#d6d3d1",
+];
+
+function AppShare({ apps }: { apps: { name: string; seconds: number }[] }) {
+  const top = apps.slice(0, TOP_APPS);
+  const otherSeconds = apps.slice(TOP_APPS).reduce((sum, app) => sum + app.seconds, 0);
+  const slices = otherSeconds > 0 ? [...top, { name: "Other", seconds: otherSeconds }] : top;
+  const total = slices.reduce((sum, app) => sum + app.seconds, 0);
+  const size = 168;
+  const stroke = 22;
+  const radius = (size - stroke) / 2;
+  const center = size / 2;
+  const circumference = 2 * Math.PI * radius;
+  let cursor = 0;
+
+  return (
+    <Stack spacing={1.25} sx={{ mb: 2 }}>
+      <Box sx={{ display: "flex", justifyContent: "center" }}>
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label="Top 10 apps">
+          <circle cx={center} cy={center} r={radius} fill="none" stroke="#e4dccf" strokeWidth={stroke} />
+          {slices.map((app, index) => {
+            const fraction = total > 0 ? app.seconds / total : 0;
+            const length = fraction * circumference;
+            const rotation = (cursor / circumference) * 360 - 90;
+            cursor += length;
+            const gap = Math.max(0, circumference - length);
+            return (
+              <circle
+                key={app.name}
+                cx={center}
+                cy={center}
+                r={radius}
+                fill="none"
+                stroke={SLICE_COLORS[index % SLICE_COLORS.length]}
+                strokeWidth={stroke}
+                strokeDasharray={gap < 1 ? undefined : `${length} ${gap}`}
+                transform={`rotate(${rotation} ${center} ${center})`}
+              >
+                <title>{`${app.name} ${formatDuration(app.seconds)}`}</title>
+              </circle>
+            );
+          })}
+        </svg>
+      </Box>
+      {slices.map((app, index) => (
+        <Stack key={app.name} direction="row" spacing={1} sx={{ alignItems: "center" }}>
+          <Box
+            sx={{
+              width: 8,
+              height: 8,
+              borderRadius: "50%",
+              bgcolor: SLICE_COLORS[index % SLICE_COLORS.length],
+              flexShrink: 0,
+            }}
+          />
+          <Typography variant="body2" noWrap sx={{ flexGrow: 1 }}>
+            {app.name}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {formatDuration(app.seconds)}
+          </Typography>
+          <Typography variant="caption" sx={{ minWidth: 36, textAlign: "right" }}>
+            {total > 0 ? `${Math.round((app.seconds / total) * 100)}%` : ""}
+          </Typography>
+        </Stack>
+      ))}
     </Stack>
   );
 }
