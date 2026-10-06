@@ -43,7 +43,7 @@ export function AppShell() {
             Activity desk
           </Typography>
         </Box>
-        <Box sx={{ display: "flex", flexDirection: { xs: "row", md: "column" }, gap: 0.5, flexGrow: 1, minHeight: 0, overflow: "auto" }}>
+        <Box sx={{ display: "flex", flexDirection: { xs: "row", md: "column" }, gap: 0.5, flexGrow: 1, minHeight: 0, overflowX: "hidden", overflowY: "auto" }}>
           {links.map((link) => (
             <NavLink key={link.to} to={link.to} end={link.to === "/"} style={{ textDecoration: "none" }}>
               {({ isActive }) => (
@@ -54,10 +54,9 @@ export function AppShell() {
                     borderRadius: 2,
                     color: "#f6f1e8",
                     bgcolor: isActive ? "#9a3412" : "transparent",
-                    transition: "background-color 180ms ease, transform 180ms ease",
+                    transition: "background-color 180ms ease",
                     "&:hover": {
                       bgcolor: isActive ? "#9a3412" : "rgba(246, 241, 232, 0.08)",
-                      transform: { md: "translateX(4px)" },
                     },
                   }}
                 >
